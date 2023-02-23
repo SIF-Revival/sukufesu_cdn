@@ -11,40 +11,8 @@ import sanic
 from sanic.response import json, file_stream, file, text
 from aiofiles import os as async_os
 
-# Lib import
-# from lib.mongo import MongoConnection, MongoConnectionConfig
-
 # config import
 import config
-
-# main import
-# import main
-
-__type = type
-
-# Forbidden collections
-forbiddenWords = [
-    '',
-    'user_data'
-]
-
-IMAGES = [
-    '.jpg',
-    '.png',
-]
-
-AUDIO = [
-    '.wav',
-    'opus'
-]
-
-VIDEO = [
-    '.mp4'
-]
-
-DB = [
-    'json'
-]
 
 NOT_FOUND = json({
     "error": "FILE_NOT_FOUND",
@@ -63,9 +31,7 @@ def expireDate(expire: bool = True) -> str:
     if expire: 
         now.__add__(3600 * 24 * 10)
     stamp = mktime(now.timetuple())
-    return format_date_time(stamp) #--> Wed, 22 Oct 2008 10:52:40 GMT
-
-# db = MongoConnection(MongoConnectionConfig)
+    return format_date_time(stamp) #Format: Wed, 22 Oct 2008 10:52:40 GMT
 
 async def test(request):
     return json({"hello": "world"})
@@ -94,7 +60,7 @@ async def getBatchFile(request, assetPath=""):
     else:
         return NOT_FOUND
 
-async def getAssetsList(request, version):
+async def getAssetsList(request, os:str, version:str):
     path = f"{config.SIF_BASE_BATCH_PATH}{version}/"
     print(path)
     if os.path.exists(path):
@@ -112,8 +78,14 @@ async def getAssetsList(request, version):
         return NOT_FOUND
 
 async def getVersions(request):
+    versions = []
+    for path in os.scandir(config.SIF_BASE_BATCH_PATH):
+        if path.is_dir():
+            versions.append(path.name)
     return json({
-        "response_data": [], #db.getVersions()
+        "response_data": {
+            "versions": versions
+        },
     })
 
 def add_external_routes(app):
@@ -124,13 +96,7 @@ def add_external_routes(app):
     app.add_route(getAssetFile, '/assets/<assetPath:path>', methods=["GET"])
     app.add_route(getBatchFile, '/batch/<assetPath:path>', methods=["GET"])
     app.add_route(getVersions, '/api/versions', methods=['GET'])
-    app.add_route(getAssetsList, '/api/getBatchAssets/<version:str>', methods=["GET"])
-
-    # POST
-    #login
-    #logout
-    #forgot
-    #
+    app.add_route(getAssetsList, '/api/getBatchAssets/<os:str>/<version:str>', methods=["GET"])
 
     @app.middleware('response')
     async def print_on_response(request, response: sanic.response.BaseHTTPResponse):
