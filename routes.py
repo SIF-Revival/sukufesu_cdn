@@ -85,7 +85,6 @@ async def getVersions(request):
 def add_external_routes(app):
     # GET
     app.add_route(test, '/', methods=["GET"])
-    app.add_route(getAssetFile, '/assets/', methods=["GET"])
     app.add_route(getAssetFile, '/assets/<assetPath:path>', methods=["GET"])
     app.add_route(getVersions, '/api/versions', methods=['GET'])
     app.add_route(getAssetsList, '/api/getAssetsList/<os:str>/<version:str>', methods=["GET"])
